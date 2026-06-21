@@ -1,6 +1,6 @@
 #ifndef LOGIC_H
 #define LOGIC_H
-#define GRAVITY_CONSTANT 5000000.0f
+#define GRAVITY_CONSTANT 50000000.0f
 #define SCALE 7.5f
 #define RESTITUTION 1.0f
 #define SLEEP_THRESHOLD 0.5f
@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <time.h>
 #include <SDL2/SDL.h>

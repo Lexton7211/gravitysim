@@ -10,6 +10,7 @@ int main(int argc, char *argv[]){
   double heldX = 0.0;
   double heldY = 0.0;
   while(restart){
+    int trajectoryCount = 300;
     int speedMultiplier = 1;
     int placeChoice = 1;
     int lockedBall = -1;
@@ -27,6 +28,9 @@ int main(int argc, char *argv[]){
     vec_init(&balls);
     Vec outline;
     vec_init(&outline);
+    Vec trajectory;
+    vec_init(&trajectory);
+    SDL_Point points[trajectoryCount];
 
     if(setupDisplay(&display) != 0){
       return 1;
@@ -45,9 +49,11 @@ int main(int argc, char *argv[]){
         if(event.type == SDL_KEYDOWN) {
           switch (event.key.keysym.sym) {
             case SDLK_ESCAPE:
+              memset(points, 0, sizeof(points));
               running = 0;
               break;
             case SDLK_r:
+              memset(points, 0, sizeof(points));
               restart = 1;
               running = 0;
               break;
@@ -103,6 +109,7 @@ int main(int argc, char *argv[]){
               }
               Ball *ball1 = malloc(sizeof(Ball));
               *ball1 = (Ball){.x = worldX, .y = worldY, .vx = 0, .vy = 0, .r = deleteRadius * 2, .m = 0, .c = (SDL_Color){0, 0, 0, 0}};
+
               for(size_t i = 0; i < vec_len(&balls); i++){
                 Ball *ball2 = vec_get(&balls, i);
                 double distX = ball1->x - ball2->x;
@@ -142,6 +149,7 @@ int main(int argc, char *argv[]){
               createBallObject(&balls, 0, lineStartX, lineStartY, -vx, -vy, defaultRadius, 100, (SDL_Color){255, 255, 255, 255});
               lineStartX = 0;
               lineStartY = 0;
+              memset(points, 0, sizeof(points));
             }
           }
         }
@@ -311,10 +319,36 @@ int main(int argc, char *argv[]){
         int screenEndY   = (worldY     - camera.y) * camera.zoom + WINDOW_HEIGHT / 2.0;
 
         SDL_RenderDrawLine(display.renderer, screenStartX, screenStartY, screenEndX, screenEndY);
+
+        //trajectory
+        for (size_t i = 0; i < vec_len(&balls); i++) {
+          Ball* orig = vec_get(&balls, i);
+          Ball* copy = malloc(sizeof(Ball));
+          *copy = *orig;
+          vec_push(&trajectory, copy);
+        }
+
+        double vx = (worldX - lineStartX) * SCALE;
+        double vy = (worldY - lineStartY) * SCALE;
+        createBallObject(&trajectory, 0, lineStartX, lineStartY, -vx, -vy, defaultRadius, 100, (SDL_Color){255, 255, 255, 128});
+
+        for(int i = 0; i < trajectoryCount; i++){
+          updateBalls(&trajectory);
+          Ball* ghost = vec_get(&trajectory, vec_len(&trajectory) - 1);
+          points[i].x = (ghost->x - camera.x) * camera.zoom + WINDOW_WIDTH / 2;
+          points[i].y = (ghost->y - camera.y) * camera.zoom + WINDOW_HEIGHT / 2;
+        }
       }
 
       drawCircle(&display, &camera, &outline);
+      SDL_SetRenderDrawColor(display.renderer, 255, 255, 255, 128);
+      SDL_RenderDrawPoints(display.renderer, points, trajectoryCount);
       drawCircle(&display, &camera, &balls);
+
+      for (size_t i = 0; i < vec_len(&trajectory); i++) {
+        free(vec_get(&trajectory, i));
+      }
+      vec_free(&trajectory);
 
       SDL_RenderPresent(display.renderer);
   
