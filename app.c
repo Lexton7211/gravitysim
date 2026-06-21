@@ -10,6 +10,7 @@ int main(int argc, char *argv[]){
   double heldX = 0.0;
   double heldY = 0.0;
   while(restart){
+    int speedMultiplier = 1;
     int placeChoice = 1;
     int lockedBall = -1;
     int alternate = 1;
@@ -56,6 +57,14 @@ int main(int argc, char *argv[]){
               }
               else{
                 pause = 0;
+              }
+              break;
+            case SDLK_LSHIFT:
+              speedMultiplier += 1;
+              break;
+            case SDLK_LCTRL:
+              if(speedMultiplier > 1){
+                speedMultiplier -= 1;
               }
               break;
             case SDLK_1:
@@ -210,9 +219,10 @@ int main(int argc, char *argv[]){
       }
 
       if(pause == 0){
-        calculateGravity(&balls);
-        ballCollisions(&balls);
-        updateBalls(&balls);
+        for(int i = 0; i < speedMultiplier; i++){
+          ballCollisions(&balls);
+          updateBalls(&balls);
+        }
       }
       for(size_t i = 0; i < vec_len(&balls); i++){
         Ball *ball = vec_get(&balls, i);
