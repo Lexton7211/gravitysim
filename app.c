@@ -265,17 +265,17 @@ int main(int argc, char *argv[]){
       const Uint8* state = SDL_GetKeyboardState(NULL);
       if(state[SDL_SCANCODE_F]){
         if(placeChoice == 1){
-          if(alternate){
+          if(alternate == 4){
             createBallObject(&balls, 0, worldX, worldY, 0, 0, defaultRadius, 100, (SDL_Color){255, 255, 255, 255});
             alternate = 0;
           }
           else{
-            alternate = 1;
+            alternate++;
           }
         }
         if(placeChoice == 2){
           if(pause == 0){
-            if(alternate){
+            if(alternate == 4){
               double vx =  (worldX - lineStartX) * SCALE;
               double vy = (worldY - lineStartY) * SCALE;
               if(lockedBall != -1 && lockedBall < vec_len(&balls)){
@@ -287,7 +287,7 @@ int main(int argc, char *argv[]){
               alternate = 0;
             }
             else{
-              alternate = 1;
+              alternate++;
             }
           }
         }
