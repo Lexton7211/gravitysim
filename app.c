@@ -10,6 +10,7 @@ int main(int argc, char *argv[]){
   double heldX = 0.0;
   double heldY = 0.0;
   while(restart){
+    FlashEffect flash = {0};
     int trajectoryCount = 300;
     int speedMultiplier = 1;
     int placeChoice = 1;
@@ -228,7 +229,26 @@ int main(int argc, char *argv[]){
 
       if(pause == 0){
         for(int i = 0; i < speedMultiplier; i++){
-          ballCollisions(&balls);
+          for(size_t i = 0; i < vec_len(&balls); i++){
+            for(size_t j = i + 1; j < vec_len(&balls); j++){
+              double energy_released = 0;
+              Ball *ball1 = vec_get(&balls, i);
+              Ball *ball2 = vec_get(&balls, j);
+              int collided = ballCollisions(&balls, ball1, ball2, &energy_released);
+
+              if(collided){
+                energy_released /= ENERGY_SCALE;
+                if(energy_released > 3.5){
+                  energy_released = 3.5;
+                }
+                flash_start(&flash, (SDL_Color){255, 255, 255, 255}, energy_released);
+                vec_remove(&balls, i);
+                vec_remove(&balls, j - 1);
+                i--;
+                break;
+              }
+            }
+          }
           updateBalls(&balls);
         }
       }
@@ -304,6 +324,7 @@ int main(int argc, char *argv[]){
       worldX = (mx - WINDOW_WIDTH  / 2.0) / camera.zoom + camera.x;
       worldY = (my - WINDOW_HEIGHT / 2.0) / camera.zoom + camera.y;
 
+      flash_update(&flash);
 
       //rendering
       SDL_SetRenderDrawColor(display.renderer, 0, 0, 0, 255);
@@ -349,13 +370,17 @@ int main(int argc, char *argv[]){
         free(vec_get(&trajectory, i));
       }
       vec_free(&trajectory);
+      
+
+      flash_render(&display, &flash);
+
 
       SDL_RenderPresent(display.renderer);
   
       Uint32 frameEnd = SDL_GetTicks();
       Uint32 elapsed = frameEnd - frameStart;
       if(elapsed > 0){
-        printf("FPS: %f\n", 1000.0 / elapsed);
+        //printf("FPS: %f\n", 1000.0 / elapsed);
       }
 
       SDL_Delay(DT);

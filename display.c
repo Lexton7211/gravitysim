@@ -97,3 +97,40 @@ void drawCircle(Display* display, Camera* camera, Vec* balls){
     free(points);
   }
 }
+
+void flash_start(FlashEffect *flash, SDL_Color color, float duration) {
+  flash->color = color;
+  flash->alpha = 255.0f;
+  flash->duration = duration;
+  flash->elapsed = 0.0f;
+  flash->active = 1;
+}
+
+void flash_update(FlashEffect *flash) {
+  if (!flash->active) return;
+
+  flash->elapsed += DT;
+  float t = flash->elapsed / flash->duration;
+
+  if (t >= 1.0f) {
+    flash->active = 0;
+    flash->alpha = 0.0f;
+    return;
+  }
+
+  flash->alpha = 255.0f * (1.0f - t);
+}
+
+void flash_render(Display* display, FlashEffect *flash) {
+  if (!flash->active) return;
+
+  SDL_SetRenderDrawBlendMode(display->renderer, SDL_BLENDMODE_BLEND);
+  SDL_SetRenderDrawColor(display->renderer,
+                         flash->color.r,
+                         flash->color.g,
+                         flash->color.b,
+                         (Uint8)flash->alpha
+                         );
+
+  SDL_RenderFillRect(display->renderer, NULL);
+}

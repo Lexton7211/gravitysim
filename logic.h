@@ -4,6 +4,7 @@
 #define SCALE 7.5f
 #define RESTITUTION 1.0f
 #define SLEEP_THRESHOLD 0.5f
+#define ENERGY_SCALE 3e17
 
 
 #include <stdio.h>
@@ -27,7 +28,7 @@ typedef struct {
 
 void updateBalls(Vec* balls);
 void createBallObject(Vec* balls, int randomVelocitys, double cx, double cy, double vx, double vy, int r, double m, SDL_Color c);
-void ballCollisions(Vec* balls);
+int ballCollisions(Vec* balls, Ball *ball1, Ball *ball2, double *e);
 void calculateGravity(Vec* balls, size_t i, size_t j, double *ax1, double *ay1, double *ax2, double *ay2);
 
 #endif

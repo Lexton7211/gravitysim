@@ -38,24 +38,33 @@ void createBallObject(Vec* balls, int randomVelocitys, double cx, double cy, dou
   vec_push(balls, ball);
 }
 
-void ballCollisions(Vec* balls){
-  for(size_t i = 0; i < vec_len(balls); i++){
-    for(size_t j = i + 1; j < vec_len(balls); j++){
-      Ball *ball1 = vec_get(balls, i);
-      Ball *ball2 = vec_get(balls, j);
-      double distX = ball1->x - ball2->x;
-      double distY = ball1->y - ball2->y;
-      double distance = sqrt((distX * distX) + (distY * distY));
+int ballCollisions(Vec* balls, Ball *ball1, Ball *ball2, double *e){
+  double rvx = ball1->vx - ball2->vx;
+  double rvy = ball1->vy - ball2->vy;
 
-      if (distance <= ball1->r + ball2->r && distance > 0) {
+  double rx = ball1->x - ball2->x;
+  double ry = ball1->y - ball2->y;
+
+  double a = rvx*rvx + rvy*rvy;
+  if(a < 1e-10) return 0;
+  double b = 2 * (rx*rvx + ry*rvy);
+  if(b >= 0) return 0;
+  double c = rx*rx + ry*ry - pow(ball1->r + ball2->r, 2);
+
+  double discriminant = b*b - 4*a*c;
+  if(discriminant >= 0){
+    double t = (-b - sqrt(discriminant)) / (2*a);
+    if(t >= 0.0 && t <= DT) {
+      if(ball1->m >= 150 || ball2->m >= 150){
         //velocity after merge
         double vfx = (ball1->m * ball1->vx + ball2->m * ball2->vx) / (ball1->m + ball2->m);
         double vfy = (ball1->m * ball1->vy + ball2->m * ball2->vy) / (ball1->m + ball2->m);
-        
+
         double theta = atan(vfy / vfx);
+        //printf("Angle: %f", theta);
 
         //gravitational binding
-        double e = GRAVITY_CONSTANT * ball1->m * ball2->m / sqrt(pow(ball2->x - ball1->x, 2) + pow(ball2->y - ball1->y, 2));
+        *e = GRAVITY_CONSTANT * ball1->m * ball2->m / sqrt(pow(ball2->x - ball1->x, 2) + pow(ball2->y - ball1->y, 2));
 
         //merged body's position
         double xf = (ball1->m * ball1->x + ball2->m * ball2->x) / (ball1->m + ball2->m);
@@ -69,36 +78,31 @@ void ballCollisions(Vec* balls){
         else{
           createBallObject(balls, 0, xf, yf, vfx, vfy, rf, ball1->m + ball2->m, ball2->c);
         }
-        vec_remove(balls, i);
-        vec_remove(balls, j - 1);
-        i--;
-        break;
-
-        //may use later
-        /*double nx = distX / distance;
-        double ny = distY / distance;
-
+        return 1;
+      }
+      else{
+        double distance = sqrt(rx*rx + ry*ry);
+        double nx = rx / distance;
+        double ny = ry / distance;
         double overlap = (ball1->r + ball2->r) - distance + 0.5;
         ball1->x += nx * (overlap / 2.0);
         ball1->y += ny * (overlap / 2.0);
         ball2->x -= nx * (overlap / 2.0);
         ball2->y -= ny * (overlap / 2.0);
-
         double dvx = ball1->vx - ball2->vx;
         double dvy = ball1->vy - ball2->vy;
-        double dot = dvx * nx + dvy * ny;
-
-        if (dot >= 0) continue;
-
+        double dot = dvx*nx + dvy*ny;
+        if(dot >= 0) return 0;
         double impulse = (2.0 * dot) / (ball1->m + ball2->m);
-
         ball1->vx -= impulse * ball2->m * nx;
         ball1->vy -= impulse * ball2->m * ny;
         ball2->vx += impulse * ball1->m * nx;
-        ball2->vy += impulse * ball1->m * ny;*/
+        ball2->vy += impulse * ball1->m * ny;
+        return 0;
       }
     }
   }
+  return 0;
 }
 
 void calculateGravity(Vec* balls, size_t i, size_t j, double *ax1, double *ay1, double *ax2, double *ay2){
