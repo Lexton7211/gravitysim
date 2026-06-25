@@ -7,25 +7,32 @@ void updateBalls(Vec* balls) {
     ball->x += ball->vx * DT + 0.5 * ball->ax * DT * DT;
     ball->y += ball->vy * DT + 0.5 * ball->ay * DT * DT;
   }
-  for(size_t i = 0; i < vec_len(balls); i++) {
-    for(size_t j = i + 1; j < vec_len(balls); j++){
-      Ball *ball1 = vec_get(balls, i);
-      Ball *ball2 = vec_get(balls, j);
 
+  size_t len = vec_len(balls);
+  double *new_ax = calloc(len, sizeof(double));
+  double *new_ay = calloc(len, sizeof(double));
+
+  for(size_t i = 0; i < len; i++) {
+    for(size_t j = i + 1; j < len; j++){
       double ax1, ay1, ax2, ay2;
       calculateGravity(balls, i, j, &ax1, &ay1, &ax2, &ay2);
-
-      ball1->vx += 0.5 * (ball1->ax + ax1) * DT;
-      ball1->vy += 0.5 * (ball1->ay + ay1) * DT;
-      ball2->vx += 0.5 * (ball2->ax + ax2) * DT;
-      ball2->vy += 0.5 * (ball2->ay + ay2) * DT;
-
-      ball1->ax = ax1;
-      ball1->ay = ay1;
-      ball2->ax = ax2;
-      ball2->ay = ay2;
+      new_ax[i] += ax1;
+      new_ay[i] += ay1;
+      new_ax[j] += ax2;
+      new_ay[j] += ay2;
     }
   }
+
+  for(size_t i = 0; i < len; i++){
+    Ball *ball = vec_get(balls, i);
+    ball->vx += 0.5 * (ball->ax + new_ax[i]) * DT;
+    ball->vy += 0.5 * (ball->ay + new_ay[i]) * DT;
+    ball->ax = new_ax[i];
+    ball->ay = new_ay[i];
+  }
+
+  free(new_ax);
+  free(new_ay);
 }
 
 void createBallObject(Vec* balls, int randomVelocitys, double cx, double cy, double vx, double vy, int r, double m, SDL_Color c){
